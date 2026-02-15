@@ -17,6 +17,8 @@ const bot = new TelegramBot(token, { polling: false });
 
 app.use(cors());
 app.use(bodyParser.json());
+// Раздаём статичные файлы (HTML, CSS, JS, картинки)
+app.use(express.static(__dirname));
 
 // Путь к файлу с временными слотами
 const TIME_SLOTS_FILE = path.join(__dirname, 'timeSlots.json');
