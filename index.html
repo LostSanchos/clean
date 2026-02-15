@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="cs" class="scroll-smooth">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Clean Master - Kalkulačka</title>
+    <style>
+        .service-item { transition: all 0.3s ease; }
+        .service-item:hover { background-color: #f3f4f6; }
+        .calculator-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .calc-card { background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.1); }
+        .time-slot { transition: all 0.2s ease; }
+        .time-slot:hover:not(.disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .time-slot.selected { background-color: #1e3a8a; color: white; }
+        .time-slot.disabled { opacity: 0.5; cursor: not-allowed; background-color: #f3f4f6; }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="min-h-screen">
+        <nav class="fixed top-0 w-full bg-white/95 backdrop-blur-sm shadow-sm z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="text-2xl font-bold text-[#1e3a8a]">Clean Master</div>
+                    <div class="hidden md:flex space-x-8">
+                        <a href="#sluzby" class="text-gray-700 hover:text-[#1e3a8a] transition">Služby</a>
+                        <a href="#calculator" class="text-gray-700 hover:text-[#1e3a8a] transition">Kalkulačka</a>
+                        <a href="#kontakt" class="text-gray-700 hover:text-[#1e3a8a] transition">Kontakt</a>
+                    </div>
+                    <a href="#calculator" class="bg-[#1e3a8a] text-white px-6 py-2 rounded-lg hover:bg-[#1e40af] transition">Kalkulačka ceny</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        
+
+        <!-- Calculator Section -->
+        <section id="calculator" class="py-20 calculator-section">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold text-white mb-4">Kalkulačka ceny úklidu</h2>
+                    <p class="text-xl text-white/90">Dostupné časy se aktualizují automaticky</p>
+                </div>
+
+                <div class="calc-card p-8 md:p-12">
+                    <form id="calculator-form">
+                        <!-- Počet pokojů -->
+                        <div class="mb-8">
+                            <label class="block text-lg font-semibold text-gray-900 mb-4">Počet pokojů</label>
+                            <div class="grid grid-cols-5 gap-3">
+                                <button type="button" class="room-btn py-3 px-4 border-2 border-gray-300 rounded-lg font-semibold hover:border-[#1e3a8a] hover:bg-blue-50 transition" data-rooms="1">1</button>
+                                <button type="button" class="room-btn py-3 px-4 border-2 border-gray-300 rounded-lg font-semibold hover:border-[#1e3a8a] hover:bg-blue-50 transition" data-rooms="2">2</button>
+                                <button type="button" class="room-btn py-3 px-4 border-2 border-gray-300 rounded-lg font-semibold hover:border-[#1e3a8a] hover:bg-blue-50 transition" data-rooms="3">3</button>
+                                <button type="button" class="room-btn py-3 px-4 border-2 border-gray-300 rounded-lg font-semibold hover:border-[#1e3a8a] hover:bg-blue-50 transition" data-rooms="4">4</button>
+                                <button type="button" class="room-btn py-3 px-4 border-2 border-gray-300 rounded-lg font-semibold hover:border-[#1e3a8a] hover:bg-blue-50 transition" data-rooms="5">5+</button>
+                            </div>
+                        </div>
+
+                        <!-- Typ úklidu -->
+                        <div class="mb-8">
+                            <label class="block text-lg font-semibold text-gray-900 mb-4">Typ úklidu</label>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <button type="button" class="cleaning-type-btn py-4 px-6 border-2 border-gray-300 rounded-lg font-semibold hover:border-[#1e3a8a] hover:bg-blue-50 transition" data-type="regular" data-price="800">
+                                    <div class="text-sm text-gray-600 mb-1">Pravidelná</div>
+                                    <div class="text-lg font-bold">800 Kč/hod</div>
+                                </button>
+                                <button type="button" class="cleaning-type-btn py-4 px-6 border-2 border-gray-300 rounded-lg font-semibold hover:border-[#1e3a8a] hover:bg-blue-50 transition" data-type="oneTime" data-price="1200">
+                                    <div class="text-sm text-gray-600 mb-1">Jednorázová</div>
+                                    <div class="text-lg font-bold">1200 Kč/hod</div>
+                                </button>
+                                <button type="button" class="cleaning-type-btn py-4 px-6 border-2 border-gray-300 rounded-lg font-semibold hover:border-[#1e3a8a] hover:bg-blue-50 transition" data-type="general" data-price="1500">
+                                    <div class="text-sm text-gray-600 mb-1">Generální</div>
+                                    <div class="text-lg font-bold">1500 Kč/hod</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Doplňkové služby -->
+                        <div class="mb-8">
+                            <label class="block text-lg font-semibold text-gray-900 mb-4">Doplňkové služby</label>
+                            <div class="space-y-3">
+                                <div class="service-item p-4 border-2 border-gray-200 rounded-lg flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="balcony" class="extra-service w-5 h-5 text-[#1e3a8a] rounded" data-price="500">
+                                        <label for="balcony" class="ml-3 text-gray-900 font-medium cursor-pointer">Úklid balkonu</label>
+                                    </div>
+                                    <span class="text-gray-600 font-semibold">500 Kč</span>
+                                </div>
+                                <div class="service-item p-4 border-2 border-gray-200 rounded-lg flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="garage" class="extra-service w-5 h-5 text-[#1e3a8a] rounded" data-price="800">
+                                        <label for="garage" class="ml-3 text-gray-900 font-medium cursor-pointer">Úklid garáže</label>
+                                    </div>
+                                    <span class="text-gray-600 font-semibold">800 Kč</span>
+                                </div>
+                                <div class="service-item p-4 border-2 border-gray-200 rounded-lg flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="fridge" class="extra-service w-5 h-5 text-[#1e3a8a] rounded" data-price="400">
+                                        <label for="fridge" class="ml-3 text-gray-900 font-medium cursor-pointer">Mytí lednička zevnitř</label>
+                                    </div>
+                                    <span class="text-gray-600 font-semibold">400 Kč</span>
+                                </div>
+                                <div class="service-item p-4 border-2 border-gray-200 rounded-lg flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="windows" class="extra-service w-5 h-5 text-[#1e3a8a] rounded" data-price="300">
+                                        <label for="windows" class="ml-3 text-gray-900 font-medium cursor-pointer">Mytí oken z obou stran (za okno)</label>
+                                    </div>
+                                    <span class="text-gray-600 font-semibold">300 Kč/okno</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vlastní prostředky -->
+                        <div class="mb-8">
+                            <div class="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="ownSupplies" class="w-5 h-5 text-green-600 rounded">
+                                    <label for="ownSupplies" class="ml-3 text-gray-900 font-medium cursor-pointer">
+                                        Mám všechny potřebné prostředky doma
+                                        <span class="text-green-600 font-semibold ml-2">(-200 Kč sleva)</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Výběr data a času -->
+                        <div class="mb-8">
+                            <label class="block text-lg font-semibold text-gray-900 mb-4">Vyberte datum a čas</label>
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Datum úklidu</label>
+                                    <input type="date" id="cleaningDate" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Dostupné časy
+                                        <span id="loadingIndicator" class="text-xs text-blue-600 ml-2" style="display:none;">⟳ Načítání...</span>
+                                    </label>
+                                    <div id="timeSlots" class="grid grid-cols-3 gap-2 min-h-[100px]">
+                                        <div class="col-span-3 text-center text-gray-500 py-8 text-sm">
+                                            Vyberte datum pro zobrazení dostupných časů
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kontaktní údaje -->
+                        <div class="mb-8">
+                            <label class="block text-lg font-semibold text-gray-900 mb-4">Kontaktní údaje</label>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <input type="text" id="userName" name="userName" placeholder="Vaše jméno" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none" required>
+                                <input type="tel" id="userPhone" name="userPhone" placeholder="Telefon" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none" required>
+                                <input type="email" id="email" placeholder="E-mail" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none" required>
+                                <input type="text" id="userService" name="userService" placeholder="Typ služby" value="Úklid bytu" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none" readonly>
+                            </div>
+                            <div class="mt-4">
+                                <textarea id="message" rows="3" placeholder="Poznámka k objednávce (nepovinné)" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Celková cena -->
+                        <div class="bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] rounded-xl p-6 mb-6">
+                            <div class="flex justify-between items-center text-white">
+                                <div>
+                                    <div class="text-sm opacity-90 mb-1">Celková cena</div>
+                                    <div class="text-4xl font-bold" id="totalPrice">0 Kč</div>
+                                    <div class="text-sm opacity-75 mt-2" id="estimatedTime">Odhadovaný čas: 0 hod</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm opacity-90 mb-1">Vybraný čas</div>
+                                    <div class="text-xl font-semibold" id="selectedTime">--:--</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-green-600 text-white py-4 rounded-lg text-lg font-bold hover:bg-green-700 transition shadow-lg">
+                            Odeslat nezávaznou poptávku
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // ⚠️ ВАЖНО! После загрузки на Render замени localhost на свою ссылку!
+        // Например: const API_URL = 'https://твой-проект.onrender.com';
+        const API_URL = 'http://localhost:3000';
+        
+        let selectedRooms = 0;
+        let selectedCleaningType = null;
+        let cleaningTypePrice = 0;
+        let selectedTime = null;
+        let selectedDate = null;
+
+        // Room selection
+        document.querySelectorAll('.room-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.room-btn').forEach(b => {
+                    b.classList.remove('border-[#1e3a8a]', 'bg-blue-100');
+                });
+                this.classList.add('border-[#1e3a8a]', 'bg-blue-100');
+                selectedRooms = parseInt(this.dataset.rooms);
+                calculateTotal();
+            });
+        });
+
+        // Cleaning type selection
+        document.querySelectorAll('.cleaning-type-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.cleaning-type-btn').forEach(b => {
+                    b.classList.remove('border-[#1e3a8a]', 'bg-blue-100');
+                });
+                this.classList.add('border-[#1e3a8a]', 'bg-blue-100');
+                selectedCleaningType = this.dataset.type;
+                cleaningTypePrice = parseInt(this.dataset.price);
+                calculateTotal();
+            });
+        });
+
+        // Extra services
+        document.querySelectorAll('.extra-service').forEach(checkbox => {
+            checkbox.addEventListener('change', calculateTotal);
+        });
+
+        // Own supplies
+        document.getElementById('ownSupplies').addEventListener('change', calculateTotal);
+
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('cleaningDate').setAttribute('min', today);
+
+        // Date selection - загружаем время с сервера
+        document.getElementById('cleaningDate').addEventListener('change', async function() {
+            selectedDate = this.value;
+            await loadTimeSlots(selectedDate);
+        });
+
+        // Функция загрузки временных слотов с сервера
+        async function loadTimeSlots(date) {
+            const timeSlotsContainer = document.getElementById('timeSlots');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            
+            // Показываем индикатор загрузки
+            loadingIndicator.style.display = 'inline';
+            timeSlotsContainer.innerHTML = '<div class="col-span-3 text-center text-gray-500 py-8 text-sm">Načítání dostupných časů...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/time-slots/${date}`);
+                
+                if (!response.ok) {
+                    throw new Error('Chyba načítání');
+                }
+                
+                const data = await response.json();
+                displayTimeSlots(data);
+                
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                timeSlotsContainer.innerHTML = '<div class="col-span-3 text-center text-red-500 py-8 text-sm">❌ Chyba připojení k serveru</div>';
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        // Отображение временных слотов
+        function displayTimeSlots(data) {
+            const timeSlotsContainer = document.getElementById('timeSlots');
+            timeSlotsContainer.innerHTML = '';
+            
+            const { availableSlots, bookedSlots } = data;
+            
+            if (!availableSlots || availableSlots.length === 0) {
+                timeSlotsContainer.innerHTML = '<div class="col-span-3 text-center text-gray-500 py-8 text-sm">Pro tento den nejsou dostupné žádné časy</div>';
+                return;
+            }
+            
+            availableSlots.forEach(time => {
+                const isBooked = bookedSlots.includes(time);
+                const slot = document.createElement('button');
+                slot.type = 'button';
+                
+                if (isBooked) {
+                    // Забронированный слот
+                    slot.className = 'time-slot disabled py-2 px-3 border-2 border-gray-200 rounded-lg font-medium text-sm';
+                    slot.textContent = time + ' ✕';
+                    slot.disabled = true;
+                    slot.title = 'Tento čas je již obsazen';
+                } else {
+                    // Доступный слот
+                    slot.className = 'time-slot py-2 px-3 border-2 border-gray-300 rounded-lg font-medium text-sm hover:border-[#1e3a8a]';
+                    slot.textContent = time;
+                    slot.dataset.time = time;
+                    
+                    slot.addEventListener('click', function() {
+                        document.querySelectorAll('.time-slot:not(.disabled)').forEach(s => {
+                            s.classList.remove('selected');
+                        });
+                        this.classList.add('selected');
+                        selectedTime = this.dataset.time;
+                        document.getElementById('selectedTime').textContent = selectedTime;
+                    });
+                }
+                
+                timeSlotsContainer.appendChild(slot);
+            });
+        }
+
+        function calculateTotal() {
+            if (!selectedRooms || !selectedCleaningType) {
+                document.getElementById('totalPrice').textContent = '0 Kč';
+                document.getElementById('estimatedTime').textContent = 'Odhadovaný čas: 0 hod';
+                return;
+            }
+
+            const baseHours = selectedRooms * 1.5;
+            let totalPrice = baseHours * cleaningTypePrice;
+
+            document.querySelectorAll('.extra-service:checked').forEach(service => {
+                totalPrice += parseInt(service.dataset.price);
+            });
+
+            if (document.getElementById('ownSupplies').checked) {
+                totalPrice -= 200;
+            }
+
+            document.getElementById('totalPrice').textContent = totalPrice.toLocaleString('cs-CZ') + ' Kč';
+            document.getElementById('estimatedTime').textContent = `Odhadovaný čas: ${baseHours} hod`;
+        }
+
+        // Form submission
+        document.getElementById('calculator-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!selectedTime || !selectedDate) {
+                alert('Prosím vyberte datum a čas úklidu');
+                return;
+            }
+
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            btn.textContent = 'Odesílání...';
+            btn.disabled = true;
+
+            const extraServices = [];
+            document.querySelectorAll('.extra-service:checked').forEach(service => {
+                extraServices.push(service.nextElementSibling.textContent);
+            });
+
+            const formData = {
+                name: document.getElementById('userName').value,
+                phone: document.getElementById('userPhone').value,
+                email: document.getElementById('email').value,
+                service: document.getElementById('userService').value,
+                message: `
+Počet pokojů: ${selectedRooms}
+Typ úklidu: ${selectedCleaningType}
+Datum: ${selectedDate}
+Čas: ${selectedTime}
+Doplňkové služby: ${extraServices.length > 0 ? extraServices.join(', ') : 'Žádné'}
+Vlastní prostředky: ${document.getElementById('ownSupplies').checked ? 'Ano' : 'Ne'}
+Celková cena: ${document.getElementById('totalPrice').textContent}
+
+Poznámka: ${document.getElementById('message').value || 'Žádná'}
+                `.trim()
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/send-request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert('✅ Děkujeme! Vaše poptávka byla úspěšně odeslána.\nVybraný čas byl automaticky zarezervován.');
+                    this.reset();
+                    selectedRooms = 0;
+                    selectedCleaningType = null;
+                    selectedTime = null;
+                    selectedDate = null;
+                    document.getElementById('totalPrice').textContent = '0 Kč';
+                    document.getElementById('selectedTime').textContent = '--:--';
+                    document.getElementById('timeSlots').innerHTML = '<div class="col-span-3 text-center text-gray-500 py-8 text-sm">Vyberte datum</div>';
+                    document.querySelectorAll('.room-btn, .cleaning-type-btn').forEach(b => {
+                        b.classList.remove('border-[#1e3a8a]', 'bg-blue-100');
+                    });
+                } else {
+                    alert('❌ Chyba serveru. Zkuste to prosím později.');
+                }
+            } catch (error) {
+                alert('❌ Chyba: Server neodpovídá. Zkontrolujte prosím připojení.');
+                console.error(error);
+            }
+
+            btn.textContent = originalText;
+            btn.disabled = false;
+        });
+    </script>
+</body>
+</html>

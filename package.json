@@ -1,0 +1,22 @@
+{
+  "name": "booking-system",
+  "version": "1.0.0",
+  "description": "Система бронирования с Telegram уведомлениями",
+  "main": "server-with-api.js",
+  "scripts": {
+    "start": "node server-with-api.js",
+    "dev": "node server-with-api.js"
+  },
+  "keywords": ["booking", "telegram", "nodejs"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "node-telegram-bot-api": "^0.64.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Správa časů</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen p-8">
+        <div class="max-w-6xl mx-auto">
+            <div class="bg-white rounded-lg shadow-lg p-8 mb-6">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">🛠 Admin Panel</h1>
+                <p class="text-gray-600">Správa dostupných časů pro rezervace</p>
+            </div>
+
+            <!-- Přidání nového data -->
+            <div class="bg-white rounded-lg shadow-lg p-8 mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">➕ Přidat nový den</h2>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Vyberte datum</label>
+                        <input type="date" id="newDate" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Vytvořit sloty</label>
+                        <div class="flex gap-2">
+                            <button onclick="createStandardSlots()" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                                Standardní (8:00-18:00)
+                            </button>
+                            <button onclick="createCustomSlots()" class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                                Vlastní
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vlastní sloty -->
+                <div id="customSlotsInput" class="mt-4" style="display: none;">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Zadejte časy (každý na nový řádek, formát HH:MM)</label>
+                    <textarea id="customTimes" rows="5" placeholder="08:00&#10;10:00&#10;14:00&#10;16:00" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-mono"></textarea>
+                    <button onclick="saveCustomSlots()" class="mt-2 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+                        Uložit časy
+                    </button>
+                </div>
+            </div>
+
+            <!-- Aktuální rozvrh -->
+            <div class="bg-white rounded-lg shadow-lg p-8 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900">📅 Aktuální rozvrh</h2>
+                    <button onclick="loadSchedule()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                        ⟳ Obnovit
+                    </button>
+                </div>
+                <div id="scheduleContainer" class="space-y-4">
+                    <p class="text-gray-500 text-center py-8">Načítání rozvrhu...</p>
+                </div>
+            </div>
+
+            <!-- Statistiky -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-blue-50 rounded-lg p-6 border-2 border-blue-200">
+                    <div class="text-sm text-blue-600 font-medium mb-1">Celkem dat</div>
+                    <div id="totalDates" class="text-3xl font-bold text-blue-900">0</div>
+                </div>
+                <div class="bg-green-50 rounded-lg p-6 border-2 border-green-200">
+                    <div class="text-sm text-green-600 font-medium mb-1">Volné sloty</div>
+                    <div id="freeSlots" class="text-3xl font-bold text-green-900">0</div>
+                </div>
+                <div class="bg-red-50 rounded-lg p-6 border-2 border-red-200">
+                    <div class="text-sm text-red-600 font-medium mb-1">Obsazené sloty</div>
+                    <div id="bookedSlots" class="text-3xl font-bold text-red-900">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ ВАЖНО! После загрузки на Render замени localhost на свою ссылку!
+        // Например: const API_URL = 'https://твой-проект.onrender.com';
+        const API_URL = 'http://localhost:3000';
+
+        // Nastavit minimální datum na dnes
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('newDate').setAttribute('min', today);
+        document.getElementById('newDate').value = today;
+
+        // Načíst rozvrh při загрузке страницы
+        loadSchedule();
+
+        function createStandardSlots() {
+            const date = document.getElementById('newDate').value;
+            if (!date) {
+                alert('Prosím vyberte datum');
+                return;
+            }
+
+            const standardTimes = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+            saveSlots(date, standardTimes);
+        }
+
+        function createCustomSlots() {
+            document.getElementById('customSlotsInput').style.display = 'block';
+        }
+
+        function saveCustomSlots() {
+            const date = document.getElementById('newDate').value;
+            const timesText = document.getElementById('customTimes').value;
+            
+            if (!date) {
+                alert('Prosím vyberte datum');
+                return;
+            }
+
+            if (!timesText.trim()) {
+                alert('Prosím zadejte časy');
+                return;
+            }
+
+            const times = timesText.split('\n').map(t => t.trim()).filter(t => t);
+            
+            // Validace formátu HH:MM
+            const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+            for (let time of times) {
+                if (!timeRegex.test(time)) {
+                    alert(`Neplatný formát času: ${time}. Použijte formát HH:MM (např. 08:00)`);
+                    return;
+                }
+            }
+
+            saveSlots(date, times);
+        }
+
+        async function saveSlots(date, slots) {
+            try {
+                const response = await fetch(`${API_URL}/api/update-time-slots`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date, slots })
+                });
+
+                if (response.ok) {
+                    alert(`✅ Úspěšně uloženo ${slots.length} časů pro ${date}`);
+                    document.getElementById('customSlotsInput').style.display = 'none';
+                    document.getElementById('customTimes').value = '';
+                    loadSchedule();
+                } else {
+                    alert('❌ Chyba při ukládání');
+                }
+            } catch (error) {
+                alert('❌ Chyba připojení k serveru');
+                console.error(error);
+            }
+        }
+
+        async function loadSchedule() {
+            try {
+                const response = await fetch(`${API_URL}/api/time-slots`);
+                if (!response.ok) throw new Error('Chyba načítání');
+                
+                const data = await response.json();
+                displaySchedule(data);
+            } catch (error) {
+                document.getElementById('scheduleContainer').innerHTML = '<p class="text-red-500 text-center py-8">❌ Chyba načítání rozvrhu</p>';
+                console.error(error);
+            }
+        }
+
+        function displaySchedule(data) {
+            const container = document.getElementById('scheduleContainer');
+            const { availableTimeSlots, bookedTimeSlots } = data;
+            
+            // Statistiky
+            let totalDates = 0;
+            let totalFree = 0;
+            let totalBooked = 0;
+
+            // Seřadit data
+            const sortedDates = Object.keys(availableTimeSlots).sort();
+            
+            if (sortedDates.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">Žádné naplánované dny</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            
+            sortedDates.forEach(date => {
+                const slots = availableTimeSlots[date] || [];
+                const booked = bookedTimeSlots[date] || [];
+                const free = slots.filter(s => !booked.includes(s));
+                
+                totalDates++;
+                totalFree += free.length;
+                totalBooked += booked.length;
+
+                const dayCard = document.createElement('div');
+                dayCard.className = 'border-2 border-gray-200 rounded-lg p-4';
+                
+                // Форматирование даты
+                const dateObj = new Date(date + 'T00:00:00');
+                const dayName = dateObj.toLocaleDateString('cs-CZ', { weekday: 'long' });
+                const formattedDate = dateObj.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' });
+                
+                dayCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">${formattedDate}</h3>
+                            <p class="text-sm text-gray-500 capitalize">${dayName}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="deleteDate('${date}')" class="text-red-600 hover:text-red-800 text-sm font-medium">
+                                🗑 Smazat den
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mb-3">
+                        <span class="text-sm text-green-600">✓ Volné: ${free.length}</span>
+                        <span class="text-sm text-red-600">✕ Obsazené: ${booked.length}</span>
+                        <span class="text-sm text-gray-600">Σ Celkem: ${slots.length}</span>
+                    </div>
+                    <div class="grid grid-cols-6 gap-2">
+                        ${slots.map(time => {
+                            const isBooked = booked.includes(time);
+                            return `
+                                <button 
+                                    onclick="${isBooked ? `freeTime('${date}', '${time}')` : `bookTime('${date}', '${time}')`}"
+                                    class="py-1 px-2 rounded text-sm font-medium transition ${
+                                        isBooked 
+                                            ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                                            : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                    }"
+                                    title="${isBooked ? 'Klikněte pro uvolnění' : 'Klikněte pro obsazení'}"
+                                >
+                                    ${time} ${isBooked ? '✕' : '✓'}
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                
+                container.appendChild(dayCard);
+            });
+
+            // Aktualizovat statistiky
+            document.getElementById('totalDates').textContent = totalDates;
+            document.getElementById('freeSlots').textContent = totalFree;
+            document.getElementById('bookedSlots').textContent = totalBooked;
+        }
+
+        async function bookTime(date, time) {
+            if (!confirm(`Označit ${time} dne ${date} jako obsazené?`)) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/book-time`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date, time })
+                });
+
+                if (response.ok) {
+                    loadSchedule();
+                } else {
+                    const data = await response.json();
+                    alert('❌ ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ Chyba připojení');
+            }
+        }
+
+        async function freeTime(date, time) {
+            if (!confirm(`Uvolnit ${time} dne ${date}?`)) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/free-time`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date, time })
+                });
+
+                if (response.ok) {
+                    loadSchedule();
+                } else {
+                    const data = await response.json();
+                    alert('❌ ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ Chyba připojení');
+            }
+        }
+
+        async function deleteDate(date) {
+            if (!confirm(`Opravdu smazat celý den ${date}?`)) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/update-time-slots`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date, slots: [] })
+                });
+
+                if (response.ok) {
+                    alert('✅ Den smazán');
+                    loadSchedule();
+                } else {
+                    alert('❌ Chyba při mazání');
+                }
+            } catch (error) {
+                alert('❌ Chyba připojení');
+            }
+        }
+    </script>
+</body>
+</html>
