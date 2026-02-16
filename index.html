@@ -14,40 +14,6 @@
         .time-slot:hover:not(.disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .time-slot.selected { background-color: #1e3a8a; color: white; }
         .time-slot.disabled { opacity: 0.5; cursor: not-allowed; background-color: #f3f4f6; }
-        
-        /* Стили календаря */
-        .calendar-day {
-            transition: all 0.2s ease;
-            cursor: pointer;
-            position: relative;
-        }
-        .calendar-day:hover:not(.disabled):not(.past) {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .calendar-day.selected {
-            background-color: #1e3a8a !important;
-            color: white !important;
-        }
-        .calendar-day.disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-        .calendar-day.past {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-        .discount-badge {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            font-size: 10px;
-            background: #10b981;
-            color: white;
-            padding: 1px 4px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body class="antialiased">
@@ -65,9 +31,6 @@
                 </div>
             </div>
         </nav>
-
-        <!-- Hero Section -->
-        
 
         <!-- Calculator Section -->
         <section id="calculator" class="py-20 calculator-section">
@@ -159,61 +122,79 @@
                         </div>
 
                         <!-- Výběr data a času -->
-<div class="mb-8">
+                        <div class="mb-8">
                             <label class="block text-lg font-semibold text-gray-900 mb-4">Vyberte datum a čas</label>
                             <div class="grid md:grid-cols-2 gap-6">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Datum úklidu</label>
-                                    <!-- Скрытый input для хранения даты -->
-                                    <input type="date" id="cleaningDate" class="hidden" required>
-                                    <!-- Визуальный календарь -->
-                                    <div id="visualCalendar" class="border-2 border-gray-300 rounded-lg p-4 bg-white"></div>
+                                    <label for="cleaningDate" class="block text-sm font-medium text-gray-700 mb-2">Datum úklidu</label>
+                                    <input type="date" id="cleaningDate" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none" required>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Dostupné časy
-                                        <span id="loadingIndicator" class="text-xs text-blue-600 ml-2" style="display:none;">⟳ Načítání...</span>
+                                        Čas úklidu <span class="text-gray-500">(vybraný: <span id="selectedTime" class="font-bold text-[#1e3a8a]">--:--</span>)</span>
                                     </label>
-                                    <div id="timeSlots" class="grid grid-cols-3 gap-2 min-h-[100px]">
-                                        <div class="col-span-3 text-center text-gray-500 py-8 text-sm">
-                                            Vyberte datum pro zobrazení dostupných časů
-                                        </div>
+                                    <div id="timeSlots" class="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 border-2 border-gray-200 rounded-lg">
+                                        <div class="col-span-3 text-center text-gray-500 py-8 text-sm">Vyberte datum</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Kontaktní údaje -->
-                        <div class="mb-8">
-                            <label class="block text-lg font-semibold text-gray-900 mb-4">Kontaktní údaje</label>
-                            <div class="grid md:grid-cols-2 gap-4">
-                                <input type="text" id="userName" name="userName" placeholder="Vaše jméno" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none" required>
-                                <input type="tel" id="userPhone" name="userPhone" placeholder="Telefon" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none" required>
-                                <input type="email" id="email" placeholder="E-mail" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none" required>
-                                <input type="text" id="userService" name="userService" placeholder="Typ služby" value="Úklid bytu" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none" readonly>
-                            </div>
-                            <div class="mt-4">
-                                <textarea id="message" rows="3" placeholder="Poznámka k objednávce (nepovinné)" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none"></textarea>
-                            </div>
-                        </div>
-
                         <!-- Celková cena -->
-                        <div class="bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] rounded-xl p-6 mb-6">
-                            <div class="flex justify-between items-center text-white">
+                        <div class="bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] p-6 rounded-xl mb-8 text-white">
+                            <div class="flex justify-between items-center">
                                 <div>
-                                    <div class="text-sm opacity-90 mb-1">Celková cena</div>
-                                    <div class="text-4xl font-bold" id="totalPrice">0 Kč</div>
-                                    <div class="text-sm opacity-75 mt-2" id="estimatedTime">Odhadovaný čas: 0 hod</div>
+                                    <p class="text-white/80 mb-1">Celková cena</p>
+                                    <p id="totalPrice" class="text-4xl font-bold">0 Kč</p>
                                 </div>
                                 <div class="text-right">
-                                    <div class="text-sm opacity-90 mb-1">Vybraný čas</div>
-                                    <div class="text-xl font-semibold" id="selectedTime">--:--</div>
+                                    <p id="estimatedTime" class="text-white/80">Odhadovaný čas: 0 hod</p>
                                 </div>
                             </div>
                         </div>
 
-                        <button type="submit" class="w-full bg-green-600 text-white py-4 rounded-lg text-lg font-bold hover:bg-green-700 transition shadow-lg">
-                            Odeslat nezávaznou poptávku
+                        <!-- Kontaktní údaje -->
+                        <div class="mb-8 space-y-4">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Vaše kontaktní údaje</h3>
+                            
+                            <!-- ✅ ДОБАВЛЕНО: Поле выбора услуги -->
+                            <div>
+                                <label for="userService" class="block text-sm font-medium text-gray-700 mb-2">Typ služby *</label>
+                                <select id="userService" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none" required>
+                                    <option value="">-- Vyberte službu --</option>
+                                    <option value="Jednorázový úklid">Jednorázový úklid</option>
+                                    <option value="Generální úklid">Generální úklid</option>
+                                    <option value="Pravidelný úklid">Pravidelný úklid</option>
+                                    <option value="Úklid kanceláří">Úklid kanceláří</option>
+                                    <option value="Úklid po rekonstrukci">Úklid po rekonstrukci</option>
+                                    <option value="Mytí oken">Mytí oken</option>
+                                </select>
+                            </div>
+                            
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="userName" class="block text-sm font-medium text-gray-700 mb-2">Jméno a příjmení *</label>
+                                    <input type="text" id="userName" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none" required>
+                                </div>
+                                <div>
+                                    <label for="userPhone" class="block text-sm font-medium text-gray-700 mb-2">Telefon *</label>
+                                    <input type="tel" id="userPhone" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none" required>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                                <input type="email" id="email" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none" required>
+                            </div>
+                            
+                            <div>
+                                <label for="message" class="block text-sm font-medium text-gray-700 mb-2">Poznámka (nepovinné)</label>
+                                <textarea id="message" rows="3" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#1e3a8a] focus:outline-none"></textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-[#1e3a8a] text-white py-4 rounded-lg text-lg font-bold hover:bg-[#1e40af] transition">
+                            Odeslat poptávku
                         </button>
                     </form>
                 </div>
@@ -222,6 +203,7 @@
     </div>
 
     <script>
+        // ✅ ИСПРАВЛЕНО: Изменен API_URL на правильный адрес сервера
         const API_URL = 'https://clean-2-psun.onrender.com';
         
         let selectedRooms = 0;
@@ -229,9 +211,13 @@
         let cleaningTypePrice = 0;
         let selectedTime = null;
         let selectedDate = null;
-        let currentDiscount = 0; // Текущая скидка для выбранной даты
+        let currentDiscount = 0;
 
-        // Room selection
+        // Установить минимальную дату на сегодня
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('cleaningDate').setAttribute('min', today);
+
+        // Обработчики выбора комнат
         document.querySelectorAll('.room-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.room-btn').forEach(b => {
@@ -243,7 +229,7 @@
             });
         });
 
-        // Cleaning type selection
+        // Обработчики типа уборки
         document.querySelectorAll('.cleaning-type-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.cleaning-type-btn').forEach(b => {
@@ -252,284 +238,86 @@
                 this.classList.add('border-[#1e3a8a]', 'bg-blue-100');
                 selectedCleaningType = this.dataset.type;
                 cleaningTypePrice = parseInt(this.dataset.price);
-                
-                // Обновляем поле "Typ služby"
-                const serviceNames = {
-                    'regular': 'Pravidelný úklid',
-                    'oneTime': 'Jednorázový úklid',
-                    'general': 'Generální úklid'
-                };
-                document.getElementById('userService').value = serviceNames[selectedCleaningType] || 'Úklid bytu';
-                
                 calculateTotal();
             });
         });
 
-        // Extra services
-        document.querySelectorAll('.extra-service').forEach(checkbox => {
-            checkbox.addEventListener('change', calculateTotal);
+        // Обработчики дополнительных услуг
+        document.querySelectorAll('.extra-service').forEach(service => {
+            service.addEventListener('change', calculateTotal);
         });
 
-        // Own supplies
+        // Обработчик собственных средств
         document.getElementById('ownSupplies').addEventListener('change', calculateTotal);
 
-        // Инициализация визуального календаря
-        let allDiscounts = {}; // Храним все скидки
-        let allAvailableDates = {}; // Храним все доступные даты
-        
-        // Загружаем данные при загрузке страницы
-        async function initCalendar() {
-            try {
-                // Загружаем все временные слоты и скидки
-                const response = await fetch(`${API_URL}/api/time-slots`);
-                if (response.ok) {
-                    const data = await response.json();
-                    allDiscounts = data.discounts || {};
-                    allAvailableDates = data.availableTimeSlots || {};
-                }
-            } catch (error) {
-                console.error('Ошибка загрузки данных:', error);
-            }
-            
-            renderCalendar();
-        }
-        
-        // Отрисовка календаря
-        function renderCalendar() {
-            const calendarContainer = document.getElementById('visualCalendar');
-            const today = new Date();
-            const currentMonth = today.getMonth();
-            const currentYear = today.getFullYear();
-            
-            // Заголовок с месяцем и годом
-            const monthNames = ['Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen', 
-                               'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'];
-            
-            let html = `
-                <div class="text-center font-bold text-lg mb-3">${monthNames[currentMonth]} ${currentYear}</div>
-                <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-600 mb-2">
-                    <div>Po</div><div>Út</div><div>St</div><div>Čt</div><div>Pá</div><div>So</div><div>Ne</div>
-                </div>
-                <div class="grid grid-cols-7 gap-1">
-            `;
-            
-            // Первый день месяца
-            const firstDay = new Date(currentYear, currentMonth, 1);
-            let dayOfWeek = firstDay.getDay();
-            dayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Понедельник = 0
-            
-            // Пустые ячейки до первого дня
-            for (let i = 0; i < dayOfWeek; i++) {
-                html += '<div></div>';
-            }
-            
-            // Дни месяца
-            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-            const todayDate = today.toISOString().split('T')[0];
-            
-            for (let day = 1; day <= daysInMonth; day++) {
-                const date = new Date(currentYear, currentMonth, day);
-                const dateStr = date.toISOString().split('T')[0];
-                const isPast = dateStr < todayDate;
-                const hasSlots = allAvailableDates[dateStr] && allAvailableDates[dateStr].length > 0;
-                const discount = allDiscounts[dateStr] || 0;
-                
-                let dayClass = 'calendar-day p-2 rounded text-center border border-gray-200';
-                let bgColor = 'bg-white hover:bg-blue-50';
-                
-                if (isPast) {
-                    dayClass += ' past';
-                    bgColor = 'bg-gray-100';
-                } else if (!hasSlots) {
-                    dayClass += ' disabled';
-                    bgColor = 'bg-gray-50';
-                } else {
-                    dayClass += ' cursor-pointer';
-                }
-                
-                html += `
-                    <div class="${dayClass} ${bgColor}" data-date="${dateStr}" onclick="selectDate('${dateStr}', ${hasSlots}, ${isPast})">
-                        <div class="font-semibold">${day}</div>
-                        ${discount > 0 ? `<div class="discount-badge">-${discount}%</div>` : ''}
-                    </div>
-                `;
-            }
-            
-            html += '</div>';
-            
-            // Добавляем следующий месяц
-            const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
-            const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
-            
-            html += `
-                <div class="text-center font-bold text-lg mb-3 mt-6">${monthNames[nextMonth]} ${nextYear}</div>
-                <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-600 mb-2">
-                    <div>Po</div><div>Út</div><div>St</div><div>Čt</div><div>Pá</div><div>So</div><div>Ne</div>
-                </div>
-                <div class="grid grid-cols-7 gap-1">
-            `;
-            
-            const firstDayNext = new Date(nextYear, nextMonth, 1);
-            let dayOfWeekNext = firstDayNext.getDay();
-            dayOfWeekNext = dayOfWeekNext === 0 ? 6 : dayOfWeekNext - 1;
-            
-            for (let i = 0; i < dayOfWeekNext; i++) {
-                html += '<div></div>';
-            }
-            
-            const daysInNextMonth = new Date(nextYear, nextMonth + 1, 0).getDate();
-            
-            for (let day = 1; day <= daysInNextMonth; day++) {
-                const date = new Date(nextYear, nextMonth, day);
-                const dateStr = date.toISOString().split('T')[0];
-                const isPast = dateStr < todayDate;
-                const hasSlots = allAvailableDates[dateStr] && allAvailableDates[dateStr].length > 0;
-                const discount = allDiscounts[dateStr] || 0;
-                
-                let dayClass = 'calendar-day p-2 rounded text-center border border-gray-200';
-                let bgColor = 'bg-white hover:bg-blue-50';
-                
-                if (isPast) {
-                    dayClass += ' past';
-                    bgColor = 'bg-gray-100';
-                } else if (!hasSlots) {
-                    dayClass += ' disabled';
-                    bgColor = 'bg-gray-50';
-                } else {
-                    dayClass += ' cursor-pointer';
-                }
-                
-                html += `
-                    <div class="${dayClass} ${bgColor}" data-date="${dateStr}" onclick="selectDate('${dateStr}', ${hasSlots}, ${isPast})">
-                        <div class="font-semibold">${day}</div>
-                        ${discount > 0 ? `<div class="discount-badge">-${discount}%</div>` : ''}
-                    </div>
-                `;
-            }
-            
-            html += '</div>';
-            html += '<div class="mt-3 text-xs text-gray-500 text-center">💰 = Sleva | Šedé = Nedostupné</div>';
-            
-            calendarContainer.innerHTML = html;
-        }
-        
-        // Выбор даты
-        async function selectDate(dateStr, hasSlots, isPast) {
-            if (isPast || !hasSlots) return;
-            
-            // Убираем выделение со всех дней
-            document.querySelectorAll('.calendar-day').forEach(day => {
-                day.classList.remove('selected');
-            });
-            
-            // Выделяем выбранный день
-            document.querySelector(`[data-date="${dateStr}"]`).classList.add('selected');
-            
-            // Устанавливаем значение в скрытый input
-            document.getElementById('cleaningDate').value = dateStr;
-            selectedDate = dateStr;
-            
-            // Загружаем временные слоты и скидку
-            await loadTimeSlots(dateStr);
-            await loadDiscount(dateStr);
-        }
-        
-        // Запускаем инициализацию при загрузке
-        initCalendar();
-
-        // Date selection - загружаем время с сервера
+        // Обработчик выбора даты
         document.getElementById('cleaningDate').addEventListener('change', async function() {
             selectedDate = this.value;
+            selectedTime = null;
+            document.getElementById('selectedTime').textContent = '--:--';
+            
             await loadTimeSlots(selectedDate);
-            await loadDiscount(selectedDate); // Загружаем скидку для выбранной даты
+            await loadDiscount(selectedDate);
         });
 
-        // Функция загрузки временных слотов с сервера
+        // Загрузка временных слотов
         async function loadTimeSlots(date) {
-            const timeSlotsContainer = document.getElementById('timeSlots');
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            
-            // Показываем индикатор загрузки
-            loadingIndicator.style.display = 'inline';
-            timeSlotsContainer.innerHTML = '<div class="col-span-3 text-center text-gray-500 py-8 text-sm">Načítání dostupných časů...</div>';
-            
             try {
                 const response = await fetch(`${API_URL}/api/time-slots/${date}`);
-                
-                if (!response.ok) {
-                    throw new Error('Chyba načítání');
-                }
+                if (!response.ok) throw new Error('Chyba načítání');
                 
                 const data = await response.json();
-                displayTimeSlots(data);
+                const { availableSlots, bookedSlots } = data;
                 
-            } catch (error) {
-                console.error('Ошибка загрузки:', error);
-                timeSlotsContainer.innerHTML = '<div class="col-span-3 text-center text-red-500 py-8 text-sm">❌ Chyba připojení k serveru</div>';
-            } finally {
-                loadingIndicator.style.display = 'none';
-            }
-        }
-
-        // Отображение временных слотов
-        function displayTimeSlots(data) {
-            const timeSlotsContainer = document.getElementById('timeSlots');
-            timeSlotsContainer.innerHTML = '';
-            
-            const { availableSlots, bookedSlots } = data;
-            
-            if (!availableSlots || availableSlots.length === 0) {
-                timeSlotsContainer.innerHTML = '<div class="col-span-3 text-center text-gray-500 py-8 text-sm">Pro tento den nejsou dostupné žádné časy</div>';
-                return;
-            }
-            
-            availableSlots.forEach(time => {
-                const isBooked = bookedSlots.includes(time);
-                const slot = document.createElement('button');
-                slot.type = 'button';
+                const container = document.getElementById('timeSlots');
+                container.innerHTML = '';
                 
-                if (isBooked) {
-                    // Забронированный слот
-                    slot.className = 'time-slot disabled py-2 px-3 border-2 border-gray-200 rounded-lg font-medium text-sm';
-                    slot.textContent = time + ' ✕';
-                    slot.disabled = true;
-                    slot.title = 'Tento čas je již obsazen';
-                } else {
-                    // Доступный слот
-                    slot.className = 'time-slot py-2 px-3 border-2 border-gray-300 rounded-lg font-medium text-sm hover:border-[#1e3a8a]';
-                    slot.textContent = time;
-                    slot.dataset.time = time;
-                    
-                    slot.addEventListener('click', function() {
-                        document.querySelectorAll('.time-slot:not(.disabled)').forEach(s => {
-                            s.classList.remove('selected');
-                        });
-                        this.classList.add('selected');
-                        selectedTime = this.dataset.time;
-                        document.getElementById('selectedTime').textContent = selectedTime;
-                    });
+                if (availableSlots.length === 0) {
+                    container.innerHTML = '<div class="col-span-3 text-center text-gray-500 py-8 text-sm">Pro tento den nejsou k dispozici žádné časy</div>';
+                    return;
                 }
                 
-                timeSlotsContainer.appendChild(slot);
-            });
+                availableSlots.forEach(time => {
+                    const isBooked = bookedSlots.includes(time);
+                    const slot = document.createElement('button');
+                    slot.type = 'button';
+                    slot.className = `time-slot py-2 px-3 border-2 rounded-lg font-semibold text-sm ${
+                        isBooked 
+                            ? 'disabled border-gray-200 bg-gray-100 text-gray-400' 
+                            : 'border-gray-300 hover:border-[#1e3a8a] hover:bg-blue-50'
+                    }`;
+                    slot.textContent = time;
+                    slot.disabled = isBooked;
+                    
+                    if (!isBooked) {
+                        slot.addEventListener('click', function() {
+                            document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                            this.classList.add('selected');
+                            selectedTime = time;
+                            document.getElementById('selectedTime').textContent = time;
+                        });
+                    }
+                    
+                    container.appendChild(slot);
+                });
+                
+            } catch (error) {
+                console.error('Ошибка загрузки слотов:', error);
+                document.getElementById('timeSlots').innerHTML = '<div class="col-span-3 text-center text-red-500 py-8 text-sm">Chyba načítání časů</div>';
+            }
         }
 
-        // Функция загрузки скидки для даты
+        // ✅ ИСПРАВЛЕНО: Функция загрузки скидки
         async function loadDiscount(date) {
             try {
                 const response = await fetch(`${API_URL}/api/discount/${date}`);
-                
-                if (!response.ok) {
-                    currentDiscount = 0;
-                    return;
-                }
+                if (!response.ok) throw new Error('Chyba načítání slevy');
                 
                 const data = await response.json();
                 currentDiscount = data.discount || 0;
                 
-                // Обновляем отображение скидки
                 updateDiscountDisplay();
-                calculateTotal(); // Пересчитываем цену со скидкой
+                calculateTotal();
                 
             } catch (error) {
                 console.error('Ошибка загрузки скидки:', error);
@@ -644,6 +432,7 @@ Poznámka: ${document.getElementById('message').value || 'Žádná'}
                     selectedCleaningType = null;
                     selectedTime = null;
                     selectedDate = null;
+                    currentDiscount = 0;
                     document.getElementById('totalPrice').textContent = '0 Kč';
                     document.getElementById('selectedTime').textContent = '--:--';
                     document.getElementById('timeSlots').innerHTML = '<div class="col-span-3 text-center text-gray-500 py-8 text-sm">Vyberte datum</div>';
