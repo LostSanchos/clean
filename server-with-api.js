@@ -6,16 +6,19 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = 3000;
+// Порт берём из переменной окружения (для хостинга) или используем 3000 локально
+const PORT = process.env.PORT || 3000;
 
-// ЗАМЕНИ ЭТИ ДАННЫЕ НА СВОИ
-const token = '8563716817:AAHqB-m3bTr2BPQWSD6RIQS93w2ea7OeDGA'; 
-const chatId = '943318776';
+// Токены берём из переменных окружения (безопасно!) или используем дефолтные для локальной разработки
+const token = process.env.TELEGRAM_TOKEN || '8563716817:AAHqB-m3bTr2BPQWSD6RIQS93w2ea7OeDGA'; 
+const chatId = process.env.TELEGRAM_CHAT_ID || '943318776';
 
 const bot = new TelegramBot(token, { polling: false });
 
 app.use(cors());
 app.use(bodyParser.json());
+// Раздаём статичные файлы (HTML, CSS, JS, картинки)
+app.use(express.static(__dirname));
 
 // Путь к файлу с временными слотами
 const TIME_SLOTS_FILE = path.join(__dirname, 'timeSlots.json');
@@ -35,8 +38,7 @@ function readTimeSlots() {
     return {
         availableTimeSlots: {},
         defaultTimeSlots: ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'],
-        bookedTimeSlots: {},
-        discounts: {} // Новое поле для скидок: { 'дата': процент_скидки }
+        bookedTimeSlots: {}
     };
 }
 
@@ -145,70 +147,14 @@ app.post('/api/update-time-slots', (req, res) => {
     }
     
     const timeSlots = readTimeSlots();
-    
-    if (slots.length === 0) {
-        // Если слоты пустые, удаляем дату полностью
-        delete timeSlots.availableTimeSlots[date];
-        // Также удаляем забронированные слоты для этой даты
-        if (timeSlots.bookedTimeSlots[date]) {
-            delete timeSlots.bookedTimeSlots[date];
-        }
-        console.log(`🗑️ Удалена дата ${date} со всеми слотами`);
-    } else {
-        timeSlots.availableTimeSlots[date] = slots;
-        console.log(`📝 Обновлены слоты для ${date}:`, slots);
-    }
+    timeSlots.availableTimeSlots[date] = slots;
     
     if (saveTimeSlots(timeSlots)) {
+        console.log(`📝 Обновлены слоты для ${date}:`, slots);
         res.json({ success: true, message: 'Слоты обновлены' });
     } else {
         res.status(500).json({ success: false, message: 'Ошибка сохранения' });
     }
-});
-
-// API: Установить скидку для даты
-app.post('/api/set-discount', (req, res) => {
-    const { date, discount } = req.body;
-    
-    if (!date || discount === undefined) {
-        return res.status(400).json({ success: false, message: 'Требуется дата и процент скидки' });
-    }
-    
-    const timeSlots = readTimeSlots();
-    
-    // Инициализируем объект discounts если его нет
-    if (!timeSlots.discounts) {
-        timeSlots.discounts = {};
-    }
-    
-    if (discount === 0 || discount === null) {
-        // Удаляем скидку
-        delete timeSlots.discounts[date];
-        console.log(`🗑️ Скидка удалена для ${date}`);
-    } else {
-        // Устанавливаем скидку
-        timeSlots.discounts[date] = discount;
-        console.log(`💰 Установлена скидка ${discount}% для ${date}`);
-    }
-    
-    if (saveTimeSlots(timeSlots)) {
-        res.json({ success: true, message: 'Скидка установлена' });
-    } else {
-        res.status(500).json({ success: false, message: 'Ошибка сохранения' });
-    }
-});
-
-// API: Получить скидку для даты
-app.get('/api/discount/:date', (req, res) => {
-    const { date } = req.params;
-    const timeSlots = readTimeSlots();
-    
-    const discount = (timeSlots.discounts && timeSlots.discounts[date]) || 0;
-    
-    res.json({
-        date: date,
-        discount: discount
-    });
 });
 
 // Отправка заявки в Telegram
@@ -282,8 +228,7 @@ app.listen(PORT, () => {
                 '2024-02-21': ['10:00', '13:00', '15:00']
             },
             defaultTimeSlots: ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'],
-            bookedTimeSlots: {},
-            discounts: {} // Инициализируем пустой объект скидок
+            bookedTimeSlots: {}
         };
         saveTimeSlots(defaultData);
         console.log('✅ Vytvořen výchozí soubor timeSlots.json');
