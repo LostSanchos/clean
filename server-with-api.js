@@ -16,7 +16,6 @@ const bot = new TelegramBot(token, { polling: false });
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(__dirname));
 
 // Путь к файлу с временными слотами
 const TIME_SLOTS_FILE = path.join(__dirname, 'timeSlots.json');
@@ -146,10 +145,21 @@ app.post('/api/update-time-slots', (req, res) => {
     }
     
     const timeSlots = readTimeSlots();
-    timeSlots.availableTimeSlots[date] = slots;
+    
+    if (slots.length === 0) {
+        // Если слоты пустые, удаляем дату полностью
+        delete timeSlots.availableTimeSlots[date];
+        // Также удаляем забронированные слоты для этой даты
+        if (timeSlots.bookedTimeSlots[date]) {
+            delete timeSlots.bookedTimeSlots[date];
+        }
+        console.log(`🗑️ Удалена дата ${date} со всеми слотами`);
+    } else {
+        timeSlots.availableTimeSlots[date] = slots;
+        console.log(`📝 Обновлены слоты для ${date}:`, slots);
+    }
     
     if (saveTimeSlots(timeSlots)) {
-        console.log(`📝 Обновлены слоты для ${date}:`, slots);
         res.json({ success: true, message: 'Слоты обновлены' });
     } else {
         res.status(500).json({ success: false, message: 'Ошибка сохранения' });
