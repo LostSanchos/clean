@@ -78,14 +78,15 @@
     </div>
 
     <script>
+        // ✅ ИСПРАВЛЕНО: Изменен API_URL на правильный адрес сервера
         const API_URL = 'https://clean-2-psun.onrender.com';
 
-        // Nastavit minimální datum na dnes
+        // Наставить минимальное дату на сегодня
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('newDate').setAttribute('min', today);
         document.getElementById('newDate').value = today;
 
-        // Načíst rozvrh při загрузке страницы
+        // Загрузить расписание при загрузке страницы
         loadSchedule();
 
         function createStandardSlots() {
@@ -119,7 +120,7 @@
 
             const times = timesText.split('\n').map(t => t.trim()).filter(t => t);
             
-            // Validace formátu HH:MM
+            // Валидация формата HH:MM
             const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
             for (let time of times) {
                 if (!timeRegex.test(time)) {
@@ -170,16 +171,20 @@
             const container = document.getElementById('scheduleContainer');
             const { availableTimeSlots, bookedTimeSlots, discounts } = data;
             
-            // Statistiky
+            // Статистики
             let totalDates = 0;
             let totalFree = 0;
             let totalBooked = 0;
 
-            // Seřadit data
+            // Сортировать даты
             const sortedDates = Object.keys(availableTimeSlots).sort();
             
             if (sortedDates.length === 0) {
                 container.innerHTML = '<p class="text-gray-500 text-center py-8">Žádné naplánované dny</p>';
+                // ✅ ИСПРАВЛЕНО: Обновляем статистики даже если нет данных
+                document.getElementById('totalDates').textContent = '0';
+                document.getElementById('freeSlots').textContent = '0';
+                document.getElementById('bookedSlots').textContent = '0';
                 return;
             }
 
@@ -189,7 +194,7 @@
                 const slots = availableTimeSlots[date] || [];
                 const booked = bookedTimeSlots[date] || [];
                 const free = slots.filter(s => !booked.includes(s));
-                const discount = (discounts && discounts[date]) || 0; // Получаем скидку для даты
+                const discount = (discounts && discounts[date]) || 0;
                 
                 totalDates++;
                 totalFree += free.length;
@@ -247,7 +252,7 @@
                 container.appendChild(dayCard);
             });
 
-            // Aktualizovat statistiky
+            // Обновить статистики
             document.getElementById('totalDates').textContent = totalDates;
             document.getElementById('freeSlots').textContent = totalFree;
             document.getElementById('bookedSlots').textContent = totalBooked;
@@ -271,6 +276,7 @@
                 }
             } catch (error) {
                 alert('❌ Chyba připojení');
+                console.error(error);
             }
         }
 
@@ -292,6 +298,7 @@
                 }
             } catch (error) {
                 alert('❌ Chyba připojení');
+                console.error(error);
             }
         }
 
@@ -301,7 +308,7 @@
                 currentDiscount || ''
             );
             
-            if (discountValue === null) return; // Uživatel zrušil
+            if (discountValue === null) return; // Пользователь отменил
             
             const discount = parseInt(discountValue);
             
@@ -329,13 +336,15 @@
                 }
             } catch (error) {
                 alert('❌ Chyba připojení');
+                console.error(error);
             }
         }
 
         async function deleteDate(date) {
-            if (!confirm(`Opravdu smazat celý den ${date}?`)) return;
+            if (!confirm(`Opravdu smazat celý den ${date} včetně všech časů a slevy?`)) return;
             
             try {
+                // ✅ ИСПРАВЛЕНО: Удаляем и слоты и скидку
                 const response = await fetch(`${API_URL}/api/update-time-slots`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -343,6 +352,13 @@
                 });
 
                 if (response.ok) {
+                    // Также удаляем скидку для этой даты
+                    await fetch(`${API_URL}/api/set-discount`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ date, discount: 0 })
+                    });
+                    
                     alert('✅ Den smazán');
                     loadSchedule();
                 } else {
@@ -350,6 +366,7 @@
                 }
             } catch (error) {
                 alert('❌ Chyba připojení');
+                console.error(error);
             }
         }
     </script>
