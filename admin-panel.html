@@ -78,9 +78,7 @@
     </div>
 
     <script>
-        // ⚠️ ВАЖНО! После загрузки на Render замени localhost на свою ссылку!
-        // Например: const API_URL = 'https://твой-проект.onrender.com';
-        const API_URL = 'https://clean-2-psun.onrender.com';
+        const API_URL = 'http://localhost:3000';
 
         // Nastavit minimální datum na dnes
         const today = new Date().toISOString().split('T')[0];
@@ -170,7 +168,7 @@
 
         function displaySchedule(data) {
             const container = document.getElementById('scheduleContainer');
-            const { availableTimeSlots, bookedTimeSlots } = data;
+            const { availableTimeSlots, bookedTimeSlots, discounts } = data;
             
             // Statistiky
             let totalDates = 0;
@@ -191,6 +189,7 @@
                 const slots = availableTimeSlots[date] || [];
                 const booked = bookedTimeSlots[date] || [];
                 const free = slots.filter(s => !booked.includes(s));
+                const discount = (discounts && discounts[date]) || 0; // Получаем скидку для даты
                 
                 totalDates++;
                 totalFree += free.length;
@@ -199,7 +198,7 @@
                 const dayCard = document.createElement('div');
                 dayCard.className = 'border-2 border-gray-200 rounded-lg p-4';
                 
-                // Форматирование даты
+                // Формат даты
                 const dateObj = new Date(date + 'T00:00:00');
                 const dayName = dateObj.toLocaleDateString('cs-CZ', { weekday: 'long' });
                 const formattedDate = dateObj.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -209,10 +208,14 @@
                         <div>
                             <h3 class="text-lg font-bold text-gray-900">${formattedDate}</h3>
                             <p class="text-sm text-gray-500 capitalize">${dayName}</p>
+                            ${discount > 0 ? `<span class="inline-block mt-1 bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded">💰 Sleva ${discount}%</span>` : ''}
                         </div>
                         <div class="flex gap-2">
+                            <button onclick="setDiscount('${date}', ${discount})" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                💰 Sleva
+                            </button>
                             <button onclick="deleteDate('${date}')" class="text-red-600 hover:text-red-800 text-sm font-medium">
-                                🗑 Smazat den
+                                🗑 Smazat
                             </button>
                         </div>
                     </div>
@@ -286,6 +289,43 @@
                 } else {
                     const data = await response.json();
                     alert('❌ ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ Chyba připojení');
+            }
+        }
+
+        async function setDiscount(date, currentDiscount) {
+            const discountValue = prompt(
+                `Nastavte slevu pro ${date}:\n\nZadejte procento slevy (0-100):\n(Pro odstranění slevy zadejte 0)`,
+                currentDiscount || ''
+            );
+            
+            if (discountValue === null) return; // Uživatel zrušil
+            
+            const discount = parseInt(discountValue);
+            
+            if (isNaN(discount) || discount < 0 || discount > 100) {
+                alert('❌ Neplatná hodnota! Zadejte číslo od 0 do 100.');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/set-discount`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date, discount })
+                });
+
+                if (response.ok) {
+                    if (discount === 0) {
+                        alert(`✅ Sleva pro ${date} odstraněna`);
+                    } else {
+                        alert(`✅ Nastavena sleva ${discount}% pro ${date}`);
+                    }
+                    loadSchedule();
+                } else {
+                    alert('❌ Chyba při nastavování slevy');
                 }
             } catch (error) {
                 alert('❌ Chyba připojení');
